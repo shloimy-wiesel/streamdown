@@ -115,7 +115,7 @@ export const TableFullscreenButton = ({
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
           onClick={handleToggle}
           onKeyDown={(e) => {
-            if (e.key === "Escape" || e.key === "Enter" || e.key === " ") {
+            if (e.key === "Escape") {
               e.preventDefault();
               handleToggle();
             }
@@ -135,7 +135,6 @@ export const TableFullscreenButton = ({
           <div
             className="flex h-full w-full items-center justify-center overflow-auto p-4"
             onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
             role="presentation"
           >
             <div className="w-full max-w-full overflow-auto">
