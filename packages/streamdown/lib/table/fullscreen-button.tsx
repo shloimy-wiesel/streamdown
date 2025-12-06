@@ -73,6 +73,24 @@ export const TableFullscreenButton = ({
     return tableWrapper?.querySelector("table") as HTMLTableElement | null;
   };
 
+  // Render fullscreen table content
+  const renderFullscreenTable = () => {
+    const tableElement = getTableElement();
+    if (!tableElement) return null;
+    
+    return (
+      <table
+        className={cn(
+          "w-full border-collapse border border-border bg-background"
+        )}
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: "Table content is already sanitized by markdown parser before rendering"
+        dangerouslySetInnerHTML={{
+          __html: tableElement.innerHTML,
+        }}
+      />
+    );
+  };
+
   return (
     <>
       <button
@@ -97,7 +115,8 @@ export const TableFullscreenButton = ({
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
           onClick={handleToggle}
           onKeyDown={(e) => {
-            if (e.key === "Escape") {
+            if (e.key === "Escape" || e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
               handleToggle();
             }
           }}
@@ -120,21 +139,7 @@ export const TableFullscreenButton = ({
             role="presentation"
           >
             <div className="w-full max-w-full overflow-auto">
-              {(() => {
-                const tableElement = getTableElement();
-                if (!tableElement) return null;
-                return (
-                  <table
-                    className={cn(
-                      "w-full border-collapse border border-border bg-background"
-                    )}
-                    // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required to display table content in fullscreen"
-                    dangerouslySetInnerHTML={{
-                      __html: tableElement.innerHTML,
-                    }}
-                  />
-                );
-              })()}
+              {renderFullscreenTable()}
             </div>
           </div>
         </div>
