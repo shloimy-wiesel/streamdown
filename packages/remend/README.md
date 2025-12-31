@@ -31,6 +31,7 @@ Remend intelligently completes the following incomplete Markdown patterns:
 - **Links**: `[text](url` → `[text](streamdown:incomplete-link)`
 - **Images**: `![alt](url` → removed (can't display partial images)
 - **Block math**: `$$formula` → `$$formula$$`
+- **Math normalization**: `\(...\)` → `$$...$$` (optional)
 
 ## Installation
 
@@ -80,6 +81,7 @@ Available options:
 | `inlineCode` | Complete inline code formatting (`` ` ``) |
 | `strikethrough` | Complete strikethrough formatting (`~~`) |
 | `katex` | Complete block KaTeX math (`$$`) |
+| `normalizeMath` | Normalize math delimiters (`\(...\)` → `$$...$$`) |
 | `setextHeadings` | Handle incomplete setext headings |
 
 ### Usage with Remark

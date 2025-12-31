@@ -46,3 +46,56 @@ export const handleIncompleteBlockKatex = (text: string): string => {
 
   return addClosingKatex(text);
 };
+
+const isMathDelimiter = (char: string, nextChar: string): boolean =>
+  char === "\\" && ["[", "]", "(", ")"].includes(nextChar);
+
+export const normalizeMathDelimiters = (text: string): string => {
+  let result = "";
+  let inInlineCode = false;
+  let inMultilineCode = false;
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+
+    // Check for triple backticks (multiline code blocks)
+    if (text.startsWith("```", i)) {
+      inMultilineCode = !inMultilineCode;
+      result += "```";
+      i += 2; // Skip the next 2 backticks
+      continue;
+    }
+
+    // Check for inline code (backticks)
+    if (!inMultilineCode && char === "`") {
+      inInlineCode = !inInlineCode;
+      result += "`";
+      continue;
+    }
+
+    if (inMultilineCode || inInlineCode) {
+      result += char;
+      continue;
+    }
+
+    const nextChar = text[i + 1];
+
+    // Handle escaped backslash
+    if (char === "\\" && nextChar === "\\") {
+      result += "\\\\";
+      i += 1;
+      continue;
+    }
+
+    // Replace math delimiters
+    if (isMathDelimiter(char, nextChar)) {
+      result += "$$";
+      i += 1;
+      continue;
+    }
+
+    result += char;
+  }
+
+  return result;
+};

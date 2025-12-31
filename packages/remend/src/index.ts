@@ -6,7 +6,10 @@ import {
   handleIncompleteSingleUnderscoreItalic,
 } from "./emphasis-handlers";
 import { handleIncompleteInlineCode } from "./inline-code-handler";
-import { handleIncompleteBlockKatex } from "./katex-handler";
+import {
+  handleIncompleteBlockKatex,
+  normalizeMathDelimiters,
+} from "./katex-handler";
 import { handleIncompleteLinksAndImages } from "./link-image-handler";
 import { handleIncompleteSetextHeading } from "./setext-heading-handler";
 import { handleIncompleteStrikethrough } from "./strikethrough-handler";
@@ -33,6 +36,8 @@ export type RemendOptions = {
   strikethrough?: boolean;
   /** Complete block KaTeX math (e.g., `$$equation` → `$$equation$$`) */
   katex?: boolean;
+  /** Normalize math delimiters (e.g., `\(...\)` → `$$...$$`) */
+  normalizeMath?: boolean;
   /** Handle incomplete setext headings to prevent misinterpretation */
   setextHeadings?: boolean;
 };
@@ -68,6 +73,11 @@ const remend = (text: string, options?: RemendOptions): string => {
     }
 
     result = processedResult;
+  }
+
+  // Normalize math delimiters early so other handlers respect math blocks
+  if (isEnabled(options?.normalizeMath)) {
+    result = normalizeMathDelimiters(result);
   }
 
   // Handle various formatting completions
