@@ -206,5 +206,77 @@ Mixed paragraph: Hello مرحبا World عالم.
       const dirElements = container.querySelectorAll("[dir]");
       expect(dirElements.length).toBe(0);
     });
+
+    it('applies per-block dir in static mode with dir="auto" for mixed content', () => {
+      const content = "مرحبا بالعالم\n\nHello world";
+      const { container } = render(
+        <Streamdown dir="auto" mode="static">
+          {content}
+        </Streamdown>
+      );
+      const dirElements = container.querySelectorAll("[dir]");
+      // Should have per-block dir elements (at least one RTL and one LTR)
+      expect(dirElements.length).toBeGreaterThanOrEqual(2);
+      const dirs = Array.from(dirElements).map((el) => el.getAttribute("dir"));
+      expect(dirs).toContain("rtl");
+      expect(dirs).toContain("ltr");
+    });
+
+    it("detects correct direction per block in static mode with Hebrew and English", () => {
+      const content =
+        "# בדיקת RTL + LTR\n\nזה משפט בעברית.\n\nHere is a sentence in English.";
+      const { container } = render(
+        <Streamdown dir="auto" mode="static">
+          {content}
+        </Streamdown>
+      );
+      const dirElements = container.querySelectorAll("[dir]");
+      const dirs = Array.from(dirElements).map((el) => el.getAttribute("dir"));
+      // First block (Hebrew heading) should be RTL
+      expect(dirs[0]).toBe("rtl");
+      // Second block (Hebrew paragraph) should be RTL
+      expect(dirs[1]).toBe("rtl");
+      // Third block (English paragraph) should be LTR
+      expect(dirs[2]).toBe("ltr");
+    });
+
+    it("applies unicodeBidi isolate on block dir wrappers", () => {
+      const content = "مرحبا بالعالم\n\nHello world";
+      const { container } = render(
+        <Streamdown dir="auto" mode="static">
+          {content}
+        </Streamdown>
+      );
+      const dirDivs = container.querySelectorAll("[dir]");
+      for (const el of dirDivs) {
+        if (el.tagName === "DIV") {
+          expect(el.style.unicodeBidi).toBe("isolate");
+        }
+      }
+    });
+
+    it("static mode dir='auto' matches streaming mode per-block behavior", () => {
+      const content = "مرحبا بالعالم\n\nHello world\n\nשלום עולם";
+      const { container: staticContainer } = render(
+        <Streamdown dir="auto" mode="static">
+          {content}
+        </Streamdown>
+      );
+      const { container: streamingContainer } = render(
+        <Streamdown dir="auto" mode="streaming">
+          {content}
+        </Streamdown>
+      );
+
+      const staticDirs = Array.from(
+        staticContainer.querySelectorAll("[dir]")
+      ).map((el) => el.getAttribute("dir"));
+      const streamingDirs = Array.from(
+        streamingContainer.querySelectorAll("[dir]")
+      ).map((el) => el.getAttribute("dir"));
+
+      // Both modes should produce the same per-block directions
+      expect(staticDirs).toEqual(streamingDirs);
+    });
   });
 });
