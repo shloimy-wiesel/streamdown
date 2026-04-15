@@ -206,5 +206,51 @@ Mixed paragraph: Hello مرحبا World عالم.
       const dirElements = container.querySelectorAll("[dir]");
       expect(dirElements.length).toBe(0);
     });
+
+    it('applies per-block dir in static mode with dir="auto" for mixed content', () => {
+      // Document mixes Hebrew and English across multiple blocks. Prior to
+      // the fix, static mode set a single dir on the outer wrapper based on
+      // the first strong character, so RTL blocks were rendered in an LTR
+      // container (or vice versa). With the fix, each block gets its own
+      // detected direction — matching streaming mode behavior.
+      const mixedContent = `Here is a sentence in English with עברית באמצע.
+
+זה משפט בעברית שמשולב עם English באמצע.
+
+# English heading
+
+# כותרת בעברית`;
+
+      const { container } = render(
+        <Streamdown dir="auto" mode="static">
+          {mixedContent}
+        </Streamdown>
+      );
+
+      const dirElements = container.querySelectorAll("[dir]");
+      // Should have multiple dir elements (one per block) — not a single
+      // container-level dir as was the case before the fix.
+      expect(dirElements.length).toBeGreaterThanOrEqual(4);
+
+      const dirValues = Array.from(dirElements).map((el) =>
+        el.getAttribute("dir")
+      );
+      // Both directions should be present because each block is detected
+      // independently based on its own first strong character.
+      expect(dirValues).toContain("ltr");
+      expect(dirValues).toContain("rtl");
+    });
+
+    it('does not apply dir to outer wrapper in static mode with dir="auto"', () => {
+      // When dir="auto" in static mode we push direction down to each block
+      // rather than setting a single direction on the root wrapper.
+      const { container } = render(
+        <Streamdown dir="auto" mode="static">
+          {"Hello\n\nשלום"}
+        </Streamdown>
+      );
+      const outer = container.firstElementChild as HTMLElement;
+      expect(outer.hasAttribute("dir")).toBe(false);
+    });
   });
 });

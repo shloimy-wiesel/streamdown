@@ -754,7 +754,11 @@ export const Streamdown = memo(
       [caret, isAnimating, shouldHideCaret]
     );
 
-    // Static mode: simple rendering without streaming features
+    // Static mode: simple rendering without streaming features.
+    // When dir="auto", render per-block so each block gets its own direction
+    // detected via the "first strong character" algorithm. This matches the
+    // behavior of streaming mode and prevents mixed RTL/LTR content from
+    // getting a single, incorrect direction for the whole document.
     if (mode === "static") {
       return (
         <TranslationsContext.Provider value={translationsValue}>
@@ -768,20 +772,36 @@ export const Streamdown = memo(
                       "space-y-4 whitespace-normal [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
                       className
                     )}
-                    dir={
-                      dir === "auto"
-                        ? detectTextDirection(processedChildren)
-                        : dir
-                    }
+                    dir={dir === "auto" ? undefined : dir}
                   >
-                    <Markdown
-                      components={mergedComponents}
-                      rehypePlugins={mergedRehypePlugins}
-                      remarkPlugins={mergedRemarkPlugins}
-                      {...props}
-                    >
-                      {processedChildren}
-                    </Markdown>
+                    {dir === "auto" ? (
+                      blocksToRender.map((block, index) => (
+                        <BlockComponent
+                          components={mergedComponents}
+                          content={block}
+                          dir={blockDirections?.[index]}
+                          index={index}
+                          isIncomplete={false}
+                          key={blockKeys[index]}
+                          rehypePlugins={mergedRehypePlugins}
+                          remarkPlugins={mergedRemarkPlugins}
+                          shouldNormalizeHtmlIndentation={
+                            shouldNormalizeHtmlIndentation
+                          }
+                          shouldParseIncompleteMarkdown={false}
+                          {...props}
+                        />
+                      ))
+                    ) : (
+                      <Markdown
+                        components={mergedComponents}
+                        rehypePlugins={mergedRehypePlugins}
+                        remarkPlugins={mergedRemarkPlugins}
+                        {...props}
+                      >
+                        {processedChildren}
+                      </Markdown>
+                    )}
                   </div>
                 </PrefixContext.Provider>
               </IconProvider>
